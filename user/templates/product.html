@@ -3,7 +3,7 @@
 {{ super() }}
 {% endblock head %}
 
-{% block title %}BookStore{% endblock title%}
+{% block title %}商品詳情{% endblock title%}
 
 {% block content %}
 
@@ -22,7 +22,7 @@
     <li class="list-group-item"><b>商品單價</b>&nbsp;&nbsp;{{ data.單價 }}</li>
   </ul>
   <div class="card-body">
-    <a href="{{ url_for('user.bookstore') }}" class="btn btn-outline-primary">回商品列表</a>
+    <a href="{{ url_for('user.transaction') }}" class="btn btn-outline-primary">回商品列表</a>
   </div>
 </div>
 

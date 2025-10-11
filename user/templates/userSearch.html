@@ -1,0 +1,386 @@
+{% extends "frontstage.html" %}
+{% block head %}
+{{ super() }}
+<style>
+    .search-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .quick-filter-btn {
+        margin: 5px;
+    }
+    .results-section {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    .stats-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    .price-highlight {
+        font-weight: bold;
+        color: #dc3545;
+    }
+    
+    /* DataTables responsive styles */
+    .dataTables_wrapper {
+        width: 100%;
+    }
+    
+    /* Navigation styles */
+    .nav-tabs .nav-link {
+        color: #495057;
+    }
+    
+    .nav-tabs .nav-link.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+</style>
+<!-- Add DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<!-- Add jQuery and DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+{% endblock head %}
+
+{% block title %}房屋交易查詢{% endblock title %}
+
+{% block content %}
+
+<main class="container">
+    <!-- Navigation Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button" role="tab" aria-controls="search" aria-selected="true">
+                        房屋交易查詢
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" href="{{ url_for('user.transaction') }}">
+                        返回主頁
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="tab-content" id="mainTabsContent">
+        <div class="tab-pane fade show active" id="search" role="tabpanel" aria-labelledby="search-tab">
+            <div class="row">
+                <div class="col-12">
+                    <h2>房屋交易查詢</h2>
+                    <p class="text-muted">查詢台積電園區附近的房屋交易資訊</p>
+                </div>
+            </div>
+
+            <!-- Quick Filters -->
+            <div class="search-section">
+                <h5>快速篩選 - 台積電園區</h5>
+                <div class="row">
+                    <div class="col-12">
+                        <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="applyQuickFilter('竹科')">竹科園區</button>
+                        <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="applyQuickFilter('中科')">中科園區</button>
+                        <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="applyQuickFilter('南科')">南科園區</button>
+                        <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="applyQuickFilter('龍潭')">龍潭園區</button>
+                        <button type="button" class="btn btn-outline-secondary quick-filter-btn" onclick="clearFilters()">清除篩選</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Filters -->
+            <div class="search-section">
+                <h5>搜尋篩選</h5>
+                <form id="searchForm" method="GET">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">社區名稱縮寫</label>
+                            <input type="text" class="form-control" name="community" placeholder="輸入社區名稱關鍵字" value="{{ request.args.get('community', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">地段/地址關鍵字</label>
+                            <input type="text" class="form-control" name="address" placeholder="輸入地址關鍵字" value="{{ request.args.get('address', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">交易日期起</label>
+                            <input type="date" class="form-control" name="date_start" value="{{ request.args.get('date_start', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">交易日期迄</label>
+                            <input type="date" class="form-control" name="date_end" value="{{ request.args.get('date_end', '') }}">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-2">
+                            <label class="form-label">建物型態</label>
+                            <select class="form-select" name="building_type">
+                                <option value="">全部</option>
+                                <option value="住宅大樓" {{ 'selected' if request.args.get('building_type') == '住宅大樓' else '' }}>住宅大樓</option>
+                                <option value="華廈" {{ 'selected' if request.args.get('building_type') == '華廈' else '' }}>華廈</option>
+                                <option value="公寓" {{ 'selected' if request.args.get('building_type') == '公寓' else '' }}>公寓</option>
+                                <option value="透天厝" {{ 'selected' if request.args.get('building_type') == '透天厝' else '' }}>透天厝</option>
+                                <option value="店面" {{ 'selected' if request.args.get('building_type') == '店面' else '' }}>店面</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">建築年齡（年）</label>
+                            <div class="d-flex">
+                                <input type="number" class="form-control" name="age_min" placeholder="最小" value="{{ request.args.get('age_min', '') }}">
+                                <span class="align-self-center mx-2">-</span>
+                                <input type="number" class="form-control" name="age_max" placeholder="最大" value="{{ request.args.get('age_max', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">總價（萬元）</label>
+                            <div class="d-flex">
+                                <input type="number" class="form-control" name="price_min" placeholder="最小" value="{{ request.args.get('price_min', '') }}">
+                                <span class="align-self-center mx-2">-</span>
+                                <input type="number" class="form-control" name="price_max" placeholder="最大" value="{{ request.args.get('price_max', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">單價（萬元/坪）</label>
+                            <div class="d-flex">
+                                <input type="number" class="form-control" name="unit_price_min" placeholder="最小" value="{{ request.args.get('unit_price_min', '') }}">
+                                <span class="align-self-center mx-2">-</span>
+                                <input type="number" class="form-control" name="unit_price_max" placeholder="最大" value="{{ request.args.get('unit_price_max', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">總面積（坪）</label>
+                            <div class="d-flex">
+                                <input type="number" class="form-control" name="area_min" placeholder="最小" value="{{ request.args.get('area_min', '') }}">
+                                <span class="align-self-center mx-2">-</span>
+                                <input type="number" class="form-control" name="area_max" placeholder="最大" value="{{ request.args.get('area_max', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">主要用途</label>
+                            <select class="form-select" name="main_use">
+                                <option value="">全部</option>
+                                <option value="住家用" {{ 'selected' if request.args.get('main_use') == '住家用' else '' }}>住家用</option>
+                                <option value="商業用" {{ 'selected' if request.args.get('main_use') == '商業用' else '' }}>商業用</option>
+                                <option value="工業用" {{ 'selected' if request.args.get('main_use') == '工業用' else '' }}>工業用</option>
+                                <option value="其他" {{ 'selected' if request.args.get('main_use') == '其他' else '' }}>其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label class="form-label">交易標的</label>
+                            <select class="form-select" name="transaction_target">
+                                <option value="">全部</option>
+                                <option value="房地(土地+建物)" {{ 'selected' if request.args.get('transaction_target') == '房地(土地+建物)' else '' }}>房地(土地+建物)</option>
+                                <option value="房地(土地+建物)+車位" {{ 'selected' if request.args.get('transaction_target') == '房地(土地+建物)+車位' else '' }}>房地(土地+建物)+車位</option>
+                                <option value="建物" {{ 'selected' if request.args.get('transaction_target') == '建物' else '' }}>建物</option>
+                                <option value="土地" {{ 'selected' if request.args.get('transaction_target') == '土地' else '' }}>土地</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">主建物面積比例（%）</label>
+                            <div class="d-flex">
+                                <input type="number" class="form-control" name="main_area_ratio_min" placeholder="最小" value="{{ request.args.get('main_area_ratio_min', '') }}">
+                                <span class="align-self-center mx-2">-</span>
+                                <input type="number" class="form-control" name="main_area_ratio_max" placeholder="最大" value="{{ request.args.get('main_area_ratio_max', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">樓層</label>
+                            <div class="d-flex">
+                                <input type="number" class="form-control" name="floor_min" placeholder="最小樓層" value="{{ request.args.get('floor_min', '') }}">
+                                <span class="align-self-center mx-2">-</span>
+                                <input type="number" class="form-control" name="floor_max" placeholder="最大樓層" value="{{ request.args.get('floor_max', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">總樓層數</label>
+                            <div class="d-flex">
+                                <input type="number" class="form-control" name="total_floors_min" placeholder="最小" value="{{ request.args.get('total_floors_min', '') }}">
+                                <span class="align-self-center mx-2">-</span>
+                                <input type="number" class="form-control" name="total_floors_max" placeholder="最大" value="{{ request.args.get('total_floors_max', '') }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">搜尋</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearForm()">清除</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            {% if transactions %}
+            <div class="results-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>搜尋結果</h5>
+                    <div>
+                        <span class="text-muted">共找到 {{ total_count }} 筆符合條件的交易記錄</span>
+                    </div>
+                </div>
+
+                <!-- Summary Statistics -->
+                {% if summary_stats %}
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <h6>平均總價</h6>
+                            <div class="price-highlight">{{ "%.0f"|format(summary_stats.avg_total_price) }} 萬元</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <h6>平均單價</h6>
+                            <div class="price-highlight">{{ "%.1f"|format(summary_stats.avg_unit_price) }} 萬元/坪</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <h6>平均面積</h6>
+                            <div>{{ "%.1f"|format(summary_stats.avg_area) }} 坪</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <h6>交易筆數</h6>
+                            <div>{{ summary_stats.count }} 筆</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="table-responsive">
+                    <table class="table table-hover" id="resultsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>社區名稱</th>
+                                <th>地址</th>
+                                <th>交易日期</th>
+                                <th>建物型態</th>
+                                <th>建築年齡</th>
+                                <th>總價（萬）</th>
+                                <th>單價（萬/坪）</th>
+                                <th>總面積（坪）</th>
+                                <th>樓層</th>
+                                <th>主要用途</th>
+                                <th>交易標的</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>{{ transaction.community_name }}</td>
+                                <td title="{{ transaction.address }}">{{ transaction.address[:30] }}{% if transaction.address|length > 30 %}...{% endif %}</td>
+                                <td>{{ transaction.transaction_date.strftime('%Y-%m-%d') if transaction.transaction_date else '' }}</td>
+                                <td>{{ transaction.building_type }}</td>
+                                <td>{{ transaction.building_age if transaction.building_age else '' }}</td>
+                                <td class="price-highlight">{{ "%.0f"|format(transaction.total_price) if transaction.total_price else '' }}</td>
+                                <td class="price-highlight">{{ "%.1f"|format(transaction.unit_price) if transaction.unit_price else '' }}</td>
+                                <td>{{ "%.1f"|format(transaction.total_area) if transaction.total_area else '' }}</td>
+                                <td>{{ transaction.floor }}{% if transaction.total_floors %}/{{ transaction.total_floors }}{% endif %}</td>
+                                <td>{{ transaction.main_use }}</td>
+                                <td>{{ transaction.transaction_target }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if pagination %}
+                <nav aria-label="頁面導航">
+                    <ul class="pagination justify-content-center">
+                        {% if pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('user.userSearch', page=pagination.prev_num, **request.args) }}">上一頁</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in pagination.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != pagination.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('user.userSearch', page=page_num, **request.args) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('user.userSearch', page=pagination.next_num, **request.args) }}">下一頁</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="results-section">
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-search" style="font-size: 3em;"></i>
+                    <h5 class="mt-3">請使用上方篩選條件進行搜尋</h5>
+                    <p>或點選快速篩選按鈕查看台積電園區附近的房屋交易資訊</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable if there are results
+    var hasTransactions = {% if transactions %}true{% else %}false{% endif %};
+    if (hasTransactions) {
+        $('#resultsTable').DataTable({
+            "paging": false,
+            "searching": false,
+            "info": false,
+            "ordering": true,
+            "order": [[ 2, "desc" ]], // Sort by transaction date descending
+            "columnDefs": [
+                { "type": "date", "targets": [2] }
+            ]
+        });
+    }
+});
+
+function applyQuickFilter(area) {
+    // Set the address filter to the selected area
+    document.querySelector('input[name="address"]').value = area;
+    document.getElementById('searchForm').submit();
+}
+
+function clearFilters() {
+    // Clear all form fields
+    document.getElementById('searchForm').reset();
+    // Redirect to clear URL parameters
+    window.location.href = "{{ url_for('user.userSearch') }}";
+}
+
+function clearForm() {
+    document.getElementById('searchForm').reset();
+}
+</script>
+
+{% endblock content %}
