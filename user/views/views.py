@@ -18,31 +18,6 @@ def transaction():
             flash('No permission')
             return redirect(url_for('index'))
 
-    # Handle product detail view
-    if 'pid' in request.args:
-        pid = request.args['pid']
-        data = Product.get_product(pid)
-        
-        pname = data[1]
-        price = data[2]
-        category = data[3]
-        description = data[4]
-        image = data[5]
-        
-        if image == None:
-            image = 'sdg.jpg'
-        
-        product = {
-            '商品編號': pid,
-            '商品名稱': pname,
-            '單價': price,
-            '類別': category,
-            '商品敘述': description,
-            '商品圖片': image
-        }
-
-        return render_template('product.html', data = product)
-    
     # Simple product listing without search
     book_row = Product.get_all_product()
     book_data = []

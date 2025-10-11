@@ -183,3 +183,134 @@ class Analysis():
     def member_sale_count(input):
         sql = "SELECT COUNT(*), MEMBER.MID, MEMBER.NAME FROM ORDER_LIST, MEMBER WHERE ORDER_LIST.MID = MEMBER.MID AND MEMBER.IDENTITY = ? GROUP BY MEMBER.MID, MEMBER.NAME ORDER BY COUNT(*) DESC LIMIT 5"
         return DB.fetchall(DB.execute_input(DB.connect(), sql, [input]))
+
+
+class Transaction():
+    def get_transactions_with_filters(filters, page=1, per_page=20):
+        """Get transactions with filters and pagination"""
+        try:
+            # For now, return empty data until database tables are created
+            transactions = []
+            total_count = 0
+            
+            # Create a mock pagination object
+            class MockPagination:
+                def __init__(self):
+                    self.page = page
+                    self.per_page = per_page
+                    self.total = 0
+                    self.has_prev = False
+                    self.has_next = False
+                    self.prev_num = None
+                    self.next_num = None
+                
+                def iter_pages(self):
+                    return [1]
+            
+            pagination = MockPagination()
+            return transactions, total_count, pagination
+        except Exception as e:
+            print(f"Error in get_transactions_with_filters: {e}")
+            return [], 0, None
+    
+    def get_visible_transactions_with_filters(filters, page=1, per_page=20):
+        """Get visible transactions with filters for user search"""
+        try:
+            # For now, return empty data until database tables are created
+            transactions = []
+            total_count = 0
+            
+            # Create a mock pagination object
+            class MockPagination:
+                def __init__(self):
+                    self.page = page
+                    self.per_page = per_page
+                    self.total = 0
+                    self.has_prev = False
+                    self.has_next = False
+                    self.prev_num = None
+                    self.next_num = None
+                
+                def iter_pages(self):
+                    return [1]
+            
+            pagination = MockPagination()
+            return transactions, total_count, pagination
+        except Exception as e:
+            print(f"Error in get_visible_transactions_with_filters: {e}")
+            return [], 0, None
+    
+    def get_transaction(transaction_id):
+        """Get a single transaction by ID"""
+        try:
+            # For now, return None until database tables are created
+            return None
+        except Exception as e:
+            print(f"Error in get_transaction: {e}")
+            return None
+    
+    def add_transaction(transaction_data):
+        """Add a new transaction"""
+        try:
+            # For now, just print the data until database tables are created
+            print(f"Would add transaction: {transaction_data}")
+            return True
+        except Exception as e:
+            print(f"Error in add_transaction: {e}")
+            return False
+    
+    def update_transaction(transaction_id, updated_data):
+        """Update an existing transaction"""
+        try:
+            # For now, just print the data until database tables are created
+            print(f"Would update transaction {transaction_id}: {updated_data}")
+            return True
+        except Exception as e:
+            print(f"Error in update_transaction: {e}")
+            return False
+    
+    def hide_transaction(transaction_id):
+        """Hide a transaction (soft delete)"""
+        try:
+            # For now, just print until database tables are created
+            print(f"Would hide transaction: {transaction_id}")
+            return True
+        except Exception as e:
+            print(f"Error in hide_transaction: {e}")
+            return False
+    
+    def show_transaction(transaction_id):
+        """Show a hidden transaction"""
+        try:
+            # For now, just print until database tables are created
+            print(f"Would show transaction: {transaction_id}")
+            return True
+        except Exception as e:
+            print(f"Error in show_transaction: {e}")
+            return False
+    
+    def add_history(transaction_id, user_name, changes):
+        """Add transaction history record"""
+        try:
+            # For now, just print until database tables are created
+            print(f"Would add history for transaction {transaction_id} by {user_name}: {changes}")
+            return True
+        except Exception as e:
+            print(f"Error in add_history: {e}")
+            return False
+    
+    def get_summary_statistics(filters):
+        """Get summary statistics for filtered transactions"""
+        try:
+            # For now, return mock data until database tables are created
+            class MockStats:
+                def __init__(self):
+                    self.avg_total_price = 0
+                    self.avg_unit_price = 0
+                    self.avg_area = 0
+                    self.count = 0
+            
+            return MockStats()
+        except Exception as e:
+            print(f"Error in get_summary_statistics: {e}")
+            return None

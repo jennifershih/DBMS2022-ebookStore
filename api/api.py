@@ -45,9 +45,9 @@ def login():
             login_user(user)
 
             if( identity == 'user'):
-                return redirect(url_for('bookstore.bookstore'))
+                return redirect(url_for('user.transaction'))
             else:
-                return redirect(url_for('manager.productManager'))
+                return redirect(url_for('manager.transactionManager'))
         
         else:
             flash('*密碼錯誤，請再試一次')

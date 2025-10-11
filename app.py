@@ -7,7 +7,7 @@ from numpy import identity, product
 from sqlalchemy import null
 from api.api import *
 from api.sql import *
-from bookstore.views.views import *
+from user.views.views import *
 from backstage.views.analysis import *
 from backstage.views.manager import *
 from link import *
@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.secret_key = 'Your Key' 
 
 app.register_blueprint(api, url_prefix='/')
-app.register_blueprint(store, url_prefix='/bookstore')
+app.register_blueprint(store, url_prefix='/user')
 app.register_blueprint(analysis, url_prefix='/backstage')
 app.register_blueprint(manager, url_prefix='/backstage')
 
