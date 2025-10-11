@@ -1,74 +1,270 @@
 {% extends "backstage.html" %}
 {% block head %}
 {{ super() }}
-
+<style>
+    .edit-section {
+        background-color: white;
+        border-radius: 10px;
+        padding: 30px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .form-floating label {
+        color: #6c757d;
+    }
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
 {% endblock head %}
 
-{% block title %}BookStore{% endblock title%}
+{% block title %}編輯交易記錄{% endblock title %}
 
-{% block content%}
+{% block content %}
 
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('manager.transactionManager') }}">交易管理</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">編輯交易記錄</li>
+                </ol>
+            </nav>
+            <h2>編輯交易記錄</h2>
+            <p class="text-muted">編輯交易序號: {{ transaction.id if transaction else data.交易序號 }}</p>
+        </div>
+    </div>
 
-<br/>
-<div class="container-xl">
-  <br/>
-  <form method="post" enctype=multipart/form-data action={{ url_for('manager.edit') }}>
-    <table class="table table-bordered">
-      <tr>
-        <th>商品編號</th>
-        <td><input class="form-control" type="text" value="{{ data.商品編號 }}" name="pid" readonly class="id_input"></td>
-      </tr>
-      <tr>
-        <th>商品名稱</th>
-        <td><input class="form-control" type="text" value="{{ data.商品名稱 }}" name="name" required></td>
-      </tr>
-      <tr>
-        <th>單價</th>
-        <td><input class="form-control" type="text" value="{{ data.單價 }}" name="price" required></td>
-      </tr>
-      <tr>
-        <th>類別</th>
-        <td>
-          <select class="form-control" name="category">
-            {% if data.類別 == 'CD' %}
-              <option value="BOOK">BOOK</option>
-              <option value="DVD">DVD</option>
-              <option value="CD" selected>CD</option>
-            {% elif data.類別 == 'DVD' %}
-              <option value="BOOK">BOOK</option>
-              <option value="DVD" selected>DVD</option>
-              <option value="CD">CD</option>
-            {% else %}
-              <option value="BOOK" selected>BOOK</option>
-              <option value="DVD">DVD</option>
-              <option value="CD">CD</option>
-            {% endif %}
+    <div class="edit-section">
+        <form method="POST" action="{{ url_for('manager.updateTransaction') }}">
+            <input type="hidden" name="transaction_id" value="{{ transaction.id if transaction else data.交易序號 }}">
             
-        </select>
-      </tr>
-      <tr>
-        <th>商品敘述</th>
-        <td>
-          <textarea class="form-control" name="description">{{ data.商品敘述 }}</textarea>
-        </td>
-      </tr>
-      <tr>
-        <th>商品圖片</th>
-        <td>
-          <input type="file" name="file" id="file-uploader" data-target="file-uploader"/>
-        </td>
-      </tr>
-    </table>
-    <center>
-      <div class="option">
-        <button class="btn btn-outline-success" type="submit">確定修改</button> 
-        <a href="{{ url_for('manager.productManager') }}"><button class="btn btn-outline-danger">回商品管理</button></a>
-      </div>
-    </center>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="community_name" name="community_name" 
+                               placeholder="社區名稱" value="{{ transaction.community_name if transaction else data.社區名稱 }}" required>
+                        <label for="community_name" class="required-field">社區名稱</label>
+                    </div>
 
-  </form>
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="address" name="address" 
+                                  placeholder="地址" style="height: 100px" required>{{ transaction.address if transaction else data.地址 }}</textarea>
+                        <label for="address" class="required-field">地址</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="date" class="form-control" id="transaction_date" name="transaction_date" 
+                               placeholder="交易日期" value="{{ transaction.transaction_date.strftime('%Y-%m-%d') if transaction and transaction.transaction_date else data.交易日期 }}" required>
+                        <label for="transaction_date" class="required-field">交易日期</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="building_type" name="building_type" required>
+                            <option value="">請選擇建物型態</option>
+                            <option value="住宅大樓" {{ 'selected' if (transaction and transaction.building_type == '住宅大樓') or (data and data.建物型態 == '住宅大樓') else '' }}>住宅大樓</option>
+                            <option value="華廈" {{ 'selected' if (transaction and transaction.building_type == '華廈') or (data and data.建物型態 == '華廈') else '' }}>華廈</option>
+                            <option value="公寓" {{ 'selected' if (transaction and transaction.building_type == '公寓') or (data and data.建物型態 == '公寓') else '' }}>公寓</option>
+                            <option value="透天厝" {{ 'selected' if (transaction and transaction.building_type == '透天厝') or (data and data.建物型態 == '透天厝') else '' }}>透天厝</option>
+                            <option value="店面" {{ 'selected' if (transaction and transaction.building_type == '店面') or (data and data.建物型態 == '店面') else '' }}>店面</option>
+                        </select>
+                        <label for="building_type" class="required-field">建物型態</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="building_age" name="building_age" 
+                               placeholder="建築年齡" value="{{ transaction.building_age if transaction else data.建築年齡 }}" min="0">
+                        <label for="building_age">建築年齡（年）</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="main_use" name="main_use" required>
+                            <option value="">請選擇主要用途</option>
+                            <option value="住家用" {{ 'selected' if (transaction and transaction.main_use == '住家用') or (data and data.主要用途 == '住家用') else '' }}>住家用</option>
+                            <option value="商業用" {{ 'selected' if (transaction and transaction.main_use == '商業用') or (data and data.主要用途 == '商業用') else '' }}>商業用</option>
+                            <option value="工業用" {{ 'selected' if (transaction and transaction.main_use == '工業用') or (data and data.主要用途 == '工業用') else '' }}>工業用</option>
+                            <option value="其他" {{ 'selected' if (transaction and transaction.main_use == '其他') or (data and data.主要用途 == '其他') else '' }}>其他</option>
+                        </select>
+                        <label for="main_use" class="required-field">主要用途</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="total_price" name="total_price" 
+                               placeholder="總價" value="{{ transaction.total_price if transaction else data.總價 }}" 
+                               step="0.1" required>
+                        <label for="total_price" class="required-field">總價（萬元）</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="unit_price" name="unit_price" 
+                               placeholder="單價" value="{{ transaction.unit_price if transaction else data.單價 }}" 
+                               step="0.1" required>
+                        <label for="unit_price" class="required-field">單價（萬元/坪）</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="total_area" name="total_area" 
+                               placeholder="總面積" value="{{ transaction.total_area if transaction else data.總面積 }}" 
+                               step="0.1" required>
+                        <label for="total_area" class="required-field">總面積（坪）</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="transaction_target" name="transaction_target" required>
+                            <option value="">請選擇交易標的</option>
+                            <option value="房地(土地+建物)" {{ 'selected' if (transaction and transaction.transaction_target == '房地(土地+建物)') or (data and data.交易標的 == '房地(土地+建物)') else '' }}>房地(土地+建物)</option>
+                            <option value="房地(土地+建物)+車位" {{ 'selected' if (transaction and transaction.transaction_target == '房地(土地+建物)+車位') or (data and data.交易標的 == '房地(土地+建物)+車位') else '' }}>房地(土地+建物)+車位</option>
+                            <option value="建物" {{ 'selected' if (transaction and transaction.transaction_target == '建物') or (data and data.交易標的 == '建物') else '' }}>建物</option>
+                            <option value="土地" {{ 'selected' if (transaction and transaction.transaction_target == '土地') or (data and data.交易標的 == '土地') else '' }}>土地</option>
+                        </select>
+                        <label for="transaction_target" class="required-field">交易標的</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="main_area_ratio" name="main_area_ratio" 
+                               placeholder="主建物面積比例" value="{{ transaction.main_area_ratio if transaction else data.主建物面積比例 }}" 
+                               step="0.1" min="0" max="100">
+                        <label for="main_area_ratio">主建物面積比例（%）</label>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="floor" name="floor" 
+                                       placeholder="樓層" value="{{ transaction.floor if transaction else data.樓層 }}" min="1">
+                                <label for="floor">樓層</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="total_floors" name="total_floors" 
+                                       placeholder="總樓層數" value="{{ transaction.total_floors if transaction else data.總樓層數 }}" min="1">
+                                <label for="total_floors">總樓層數</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="parking_spaces" name="parking_spaces" 
+                                       placeholder="車位個數" value="{{ transaction.parking_spaces if transaction else (data.車位個數 if data.車位個數 else '0') }}" min="0">
+                                <label for="parking_spaces">車位個數</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{{ url_for('manager.transactionManager') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> 返回列表
+                            </a>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-danger me-2" onclick="confirmDelete()">
+                                <i class="bi bi-trash"></i> 隱藏記錄
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> 儲存變更
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">確認隱藏</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您確定要隱藏此筆交易記錄嗎？</p>
+                <p class="text-muted">注意：隱藏後將使用「隱藏」機制，可在後續恢復顯示。</p>
+                <div class="alert alert-warning">
+                    <strong>交易序號:</strong> {{ transaction.id if transaction else data.交易序號 }}<br>
+                    <strong>社區名稱:</strong> {{ transaction.community_name if transaction else data.社區名稱 }}<br>
+                    <strong>交易日期:</strong> {{ transaction.transaction_date.strftime('%Y-%m-%d') if transaction and transaction.transaction_date else data.交易日期 }}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" onclick="hideTransaction()">確認隱藏</button>
+            </div>
+        </div>
+    </div>
+</div>
 
+<script>
+function confirmDelete() {
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    deleteModal.show();
+}
 
-{% endblock content%}
+function hideTransaction() {
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = "{{ url_for('manager.hideTransaction', transaction_id=(transaction.id if transaction else data.交易序號)) }}";
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Auto-calculate unit price when total price or area changes
+document.getElementById('total_price').addEventListener('input', calculateUnitPrice);
+document.getElementById('total_area').addEventListener('input', calculateUnitPrice);
+
+function calculateUnitPrice() {
+    var totalPrice = parseFloat(document.getElementById('total_price').value) || 0;
+    var totalArea = parseFloat(document.getElementById('total_area').value) || 0;
+    
+    if (totalPrice > 0 && totalArea > 0) {
+        var unitPrice = totalPrice / totalArea;
+        document.getElementById('unit_price').value = unitPrice.toFixed(2);
+    }
+}
+
+// Auto-calculate total price when unit price or area changes
+document.getElementById('unit_price').addEventListener('input', calculateTotalPrice);
+
+function calculateTotalPrice() {
+    var unitPrice = parseFloat(document.getElementById('unit_price').value) || 0;
+    var totalArea = parseFloat(document.getElementById('total_area').value) || 0;
+    
+    if (unitPrice > 0 && totalArea > 0) {
+        var totalPrice = unitPrice * totalArea;
+        document.getElementById('total_price').value = totalPrice.toFixed(1);
+    }
+}
+
+// Validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    var floor = parseInt(document.getElementById('floor').value) || 0;
+    var totalFloors = parseInt(document.getElementById('total_floors').value) || 0;
+    
+    if (floor > 0 && totalFloors > 0 && floor > totalFloors) {
+        e.preventDefault();
+        alert('樓層不能大於總樓層數');
+        return false;
+    }
+    
+    var mainAreaRatio = parseFloat(document.getElementById('main_area_ratio').value) || 0;
+    if (mainAreaRatio > 100) {
+        e.preventDefault();
+        alert('主建物面積比例不能超過100%');
+        return false;
+    }
+});
+</script>
+
+{% endblock content %}
