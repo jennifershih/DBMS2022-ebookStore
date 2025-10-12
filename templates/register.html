@@ -14,7 +14,10 @@
 <div class="form_div">
     <form  method='post' action={{ url_for('api.register') }} >
         <p>
-            姓名：<input type="text" name="username" required/>
+            名字：<input type="text" name="firstname" required/>
+        </p>
+        <p>
+            姓氏：<input type="text" name="lastname" required/>
         </p>
 
         <div >

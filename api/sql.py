@@ -26,7 +26,7 @@ class DB():
 
 class Member():
     def get_member(account):
-        sql = "SELECT ACCOUNT, PASSWORD, MID, IDENTITY, NAME FROM MEMBER WHERE ACCOUNT = ?"
+        sql = "SELECT ACCOUNT, PASSWORD, MID, IDENTITY, FNAME, LNAME FROM MEMBER WHERE ACCOUNT = ?"
         return DB.fetchall(DB.execute_input(DB.connect(), sql, [account]))
     
     def get_all_account():
@@ -34,7 +34,7 @@ class Member():
         return DB.fetchall(DB.execute(DB.connect(), sql))
 
     def create_member(input):
-        sql = "INSERT INTO MEMBER VALUES (null, :name, :account, :password, :identity)"
+        sql = "INSERT INTO MEMBER (FNAME, LNAME, ACCOUNT, PASSWORD, IDENTITY) VALUES (:fname, :lname, :account, :password, :identity)"
         DB.execute_input(DB.connect(), sql, input)
         DB.commit()
     
@@ -48,7 +48,7 @@ class Member():
         return DB.fetchall(DB.execute_input(DB.connect(), sql, [userid]))
     
     def get_role(userid):
-        sql = 'SELECT IDENTITY, NAME FROM MEMBER WHERE MID = ?'
+        sql = 'SELECT IDENTITY, FNAME, LNAME FROM MEMBER WHERE MID = ?'
         return DB.fetchone(DB.execute_input(DB.connect(), sql, [userid]))
 
 class Cart():
@@ -156,7 +156,7 @@ class Order_List():
         DB.commit()
 
     def get_order():
-        sql = 'SELECT OID, NAME, TOTALPRICE, ORDERTIME FROM ORDER_LIST NATURAL JOIN MEMBER ORDER BY ORDERTIME DESC'
+        sql = 'SELECT OID, (FNAME || " " || LNAME) AS NAME, TOTALPRICE, ORDERTIME FROM ORDER_LIST O JOIN MEMBER M ON O.MID = M.MID ORDER BY ORDERTIME DESC'
         return DB.fetchall(DB.execute(DB.connect(), sql))
     
     def get_orderdetail():
@@ -177,9 +177,9 @@ class Analysis():
         return DB.fetchall(DB.execute(DB.connect(), sql))
 
     def member_sale(input):
-        sql = "SELECT SUM(TOTALPRICE), MEMBER.MID, MEMBER.NAME FROM ORDER_LIST, MEMBER WHERE ORDER_LIST.MID = MEMBER.MID AND MEMBER.IDENTITY = ? GROUP BY MEMBER.MID, MEMBER.NAME ORDER BY SUM(TOTALPRICE) DESC LIMIT 5"
+        sql = "SELECT SUM(TOTALPRICE), MEMBER.MID, (MEMBER.FNAME || ' ' || MEMBER.LNAME) AS NAME FROM ORDER_LIST, MEMBER WHERE ORDER_LIST.MID = MEMBER.MID AND MEMBER.IDENTITY = ? GROUP BY MEMBER.MID, MEMBER.FNAME, MEMBER.LNAME ORDER BY SUM(TOTALPRICE) DESC LIMIT 5"
         return DB.fetchall(DB.execute_input(DB.connect(), sql, [input]))
 
     def member_sale_count(input):
-        sql = "SELECT COUNT(*), MEMBER.MID, MEMBER.NAME FROM ORDER_LIST, MEMBER WHERE ORDER_LIST.MID = MEMBER.MID AND MEMBER.IDENTITY = ? GROUP BY MEMBER.MID, MEMBER.NAME ORDER BY COUNT(*) DESC LIMIT 5"
+        sql = "SELECT COUNT(*), MEMBER.MID, (MEMBER.FNAME || ' ' || MEMBER.LNAME) AS NAME FROM ORDER_LIST, MEMBER WHERE ORDER_LIST.MID = MEMBER.MID AND MEMBER.IDENTITY = ? GROUP BY MEMBER.MID, MEMBER.FNAME, MEMBER.LNAME ORDER BY COUNT(*) DESC LIMIT 5"
         return DB.fetchall(DB.execute_input(DB.connect(), sql, [input]))

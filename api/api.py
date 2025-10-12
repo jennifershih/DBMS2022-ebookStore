@@ -19,7 +19,7 @@ def user_loader(userid):
     user.id = userid
     data = Member.get_role(userid)
     user.role = data[0]
-    user.name = data[1]
+    user.name = f"{data[1]} {data[2]}".strip()  # Combine fname and lname
     return user
 
 @api.route('/login', methods=['POST', 'GET'])
@@ -70,7 +70,8 @@ def register():
             return redirect(url_for('api.register'))
         else:
             input = { 
-                'name': request.form['username'], 
+                'fname': request.form['firstname'], 
+                'lname': request.form['lastname'],
                 'account': user_account, 
                 'password': request.form['password'], 
                 'identity': request.form['identity'] 
