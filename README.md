@@ -22,18 +22,16 @@ deactivate
 MacOS / Linux
 ```
 git clone https://github.com/Text-Analytics-and-Retrieval/DBMS2022-ebookStore.git
-python3 -m pip install -r requirements.txt
 ```
 Windows
 ```
 git clone https://github.com/Text-Analytics-and-Retrieval/DBMS2022-ebookStore.git
-pip install -r requirements.txt
 ```
 ### 3. Running app.py
 Using the command below and visit the running website
 ```
-python app.py
+flask run
 ```
 ## Tools
 DB Browser for SQLite
-Visit the [website](https://sqlitebrowser.org/) for GUI tool to manage SQLite database.
+Visit the [website](https://dbms-2022-ebook-store-5so2tr2oe-jennifershihs-projects.vercel.app/)
