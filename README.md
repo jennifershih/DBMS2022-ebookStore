@@ -34,4 +34,4 @@ flask run
 ```
 ## Tools
 DB Browser for SQLite
-Visit the [website](https://dbms-2022-ebook-store-5so2tr2oe-jennifershihs-projects.vercel.app/)
+Visit the [website]
