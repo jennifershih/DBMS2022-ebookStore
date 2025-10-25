@@ -1,2 +1,5 @@
 __pycache__
 ebookstore.db
+/instance
+/migrations
+/venv
