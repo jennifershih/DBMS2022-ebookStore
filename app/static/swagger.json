@@ -1,0 +1,1262 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "不動產 API",
+    "description": "管理不動產資料的 API",
+    "version": "1.0.0"
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "User",
+      "description": "使用者管理"
+    },
+    {
+      "name": "Community",
+      "description": "社區管理"
+    },
+    {
+      "name": "Property",
+      "description": "房地產管理"
+    },
+    {
+      "name": "Transaction",
+      "description": "交易管理"
+    },
+    {
+      "name": "Point Of Interest",
+      "description": "景點管理"
+    },
+    {
+      "name": "Transportation",
+      "description": "交通管理"
+    }
+  ],
+  "paths": {
+    "/register": {
+      "post": {
+        "tags": ["User"],
+        "summary": "註冊新使用者",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要新增到系統的使用者物件，role有admin、user兩種",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "使用者建立成功"
+          },
+          "400": {
+            "description": "使用者已存在"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": ["User"],
+        "summary": "登入系統",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "用於登入的使用者憑證",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Login"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功操作",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "access_token": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "憑證無效"
+          }
+        }
+      }
+    },
+    "/communities": {
+      "get": {
+        "tags": ["Community"],
+        "summary": "取得所有社區",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "社區列表",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Community"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Community"],
+        "summary": "建立新社區",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要新增的社區物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Community"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "社區建立成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          }
+        }
+      }
+    },
+    "/communities/{community_id}": {
+      "get": {
+        "tags": ["Community"],
+        "summary": "依 ID 取得社區",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "community_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "一個社區物件",
+            "schema": {
+              "$ref": "#/definitions/Community"
+            }
+          },
+          "404": {
+            "description": "找不到社區"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Community"],
+        "summary": "更新社區",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "community_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要更新的社區物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Community"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "社區更新成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到社區"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Community"],
+        "summary": "刪除社區",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "community_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "社區刪除成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到社區"
+          }
+        }
+      }
+    },
+    "/properties": {
+      "get": {
+        "tags": ["Property"],
+        "summary": "取得所有房地產",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "房地產列表",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Property"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Property"],
+        "summary": "建立新房地產",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要新增的房地產物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Property"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "房地產建立成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          }
+        }
+      }
+    },
+    "/properties/{property_id}": {
+      "get": {
+        "tags": ["Property"],
+        "summary": "依 ID 取得房地產",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "一個房地產物件",
+            "schema": {
+              "$ref": "#/definitions/Property"
+            }
+          },
+          "404": {
+            "description": "找不到房地產"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Property"],
+        "summary": "更新房地產",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要更新的房地產物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Property"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "房地產更新成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到房地產"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Property"],
+        "summary": "刪除房地產",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "房地產刪除成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到房地產"
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "get": {
+        "tags": ["Transaction"],
+        "summary": "取得所有交易",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "交易列表",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Transaction"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Transaction"],
+        "summary": "建立新交易",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要新增的交易物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Transaction"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "交易建立成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          }
+        }
+      }
+    },
+    "/transactions/{transaction_id}": {
+      "get": {
+        "tags": ["Transaction"],
+        "summary": "依 ID 取得交易",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "一個交易物件",
+            "schema": {
+              "$ref": "#/definitions/Transaction"
+            }
+          },
+          "404": {
+            "description": "找不到交易"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Transaction"],
+        "summary": "更新交易",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要更新的交易物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Transaction"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "交易更新成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到交易"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Transaction"],
+        "summary": "刪除交易",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "交易刪除成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到交易"
+          }
+        }
+      }
+    },
+    "/transactions/search": {
+      "get": {
+        "tags": ["Transaction"],
+        "summary": "依快速搜尋名稱搜尋交易",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "description": "快速搜尋的名稱 (QuickSearch 的 name)",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "交易列表",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Transaction"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Transaction"],
+        "summary": "搜尋交易",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "交易搜尋條件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TransactionSearch"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "交易列表",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Transaction"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pois": {
+      "get": {
+        "tags": ["Point Of Interest"],
+        "summary": "取得所有景點",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "景點列表",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PointOfInterest"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Point Of Interest"],
+        "summary": "建立新景點",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要新增的景點物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PointOfInterest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "景點建立成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          }
+        }
+      }
+    },
+    "/pois/{poi_id}": {
+      "get": {
+        "tags": ["Point Of Interest"],
+        "summary": "依 ID 取得景點",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "poi_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "一個景點物件",
+            "schema": {
+              "$ref": "#/definitions/PointOfInterest"
+            }
+          },
+          "404": {
+            "description": "找不到景點"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Point Of Interest"],
+        "summary": "更新景點",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "poi_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要更新的景點物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PointOfInterest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "景點更新成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到景點"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Point Of Interest"],
+        "summary": "刪除景點",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "poi_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "景點刪除成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到景點"
+          }
+        }
+      }
+    },
+    "/transportations": {
+      "get": {
+        "tags": ["Transportation"],
+        "summary": "取得所有交通方式",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "交通方式列表",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Transportation"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Transportation"],
+        "summary": "建立新交通方式",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要新增的交通方式物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Transportation"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "交通方式建立成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          }
+        }
+      }
+    },
+    "/transportations/{transport_id}": {
+      "get": {
+        "tags": ["Transportation"],
+        "summary": "依 ID 取得交通方式",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transport_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "一個交通方式物件",
+            "schema": {
+              "$ref": "#/definitions/Transportation"
+            }
+          },
+          "404": {
+            "description": "找不到交通方式"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Transportation"],
+        "summary": "更新交通方式",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transport_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要更新的交通方式物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Transportation"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "交通方式更新成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到交通方式"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Transportation"],
+        "summary": "刪除交通方式",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "transport_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "交通方式刪除成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到交通方式"
+          }
+        }
+      }
+    },
+    "/quick_search": {
+      "get": {
+        "tags": ["QuickSearch"],
+        "summary": "取得所有快速搜尋",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "快速搜尋列表",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/QuickSearch"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["QuickSearch"],
+        "summary": "建立新快速搜尋",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要新增的快速搜尋物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/QuickSearch"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "快速搜尋建立成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          }
+        }
+      }
+    },
+    "/quick_search/{search_name}": {
+      "get": {
+        "tags": ["QuickSearch"],
+        "summary": "依名稱取得快速搜尋",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "一個快速搜尋物件",
+            "schema": {
+              "$ref": "#/definitions/QuickSearch"
+            }
+          },
+          "404": {
+            "description": "找不到快速搜尋"
+          }
+        }
+      },
+      "put": {
+        "tags": ["QuickSearch"],
+        "summary": "更新快速搜尋",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "要更新的快速搜尋物件",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/QuickSearch"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "快速搜尋更新成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到快速搜尋"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["QuickSearch"],
+        "summary": "刪除快速搜尋",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "快速搜尋刪除成功"
+          },
+          "403": {
+            "description": "僅限管理員"
+          },
+          "404": {
+            "description": "找不到快速搜尋"
+          }
+        }
+      }
+    },
+    "/quick_search/run/{search_name}": {
+      "get": {
+        "tags": ["QuickSearch"],
+        "summary": "執行快速搜尋",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "交易列表",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Transaction"
+              }
+            }
+          },
+          "404": {
+            "description": "找不到快速搜尋"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "User": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    },
+    "Login": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "Community": {
+      "type": "object",
+      "properties": {
+        "community_id": {
+          "type": "integer"
+        },
+        "district_name": {
+          "type": "string"
+        },
+        "community_name": {
+          "type": "string"
+        }
+      }
+    },
+    "Property": {
+      "type": "object",
+      "properties": {
+        "property_id": {
+          "type": "string"
+        },
+        "community_id": {
+          "type": "integer"
+        },
+        "addr_full": {
+          "type": "string"
+        },
+        "floor_no": {
+          "type": "integer"
+        },
+        "floor_total": {
+          "type": "integer"
+        },
+        "building_age": {
+          "type": "integer"
+        },
+        "total_area_ping": {
+          "type": "number"
+        },
+        "main_use": {
+          "type": "string"
+        },
+        "building_type": {
+          "type": "string"
+        }
+      }
+    },
+    "Transaction": {
+      "type": "object",
+      "properties": {
+        "transaction_id": {
+          "type": "integer"
+        },
+        "property_id": {
+          "type": "string"
+        },
+        "transaction_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "total_price_10k": {
+          "type": "integer"
+        },
+        "unit_price_10k_per_ping": {
+          "type": "number"
+        },
+        "is_hidden": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PointOfInterest": {
+      "type": "object",
+      "properties": {
+        "poi_id": {
+          "type": "string"
+        },
+        "community_id": {
+          "type": "integer"
+        },
+        "poi_name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        }
+      }
+    },
+    "Transportation": {
+      "type": "object",
+      "properties": {
+        "transport_id": {
+          "type": "string"
+        },
+        "community_id": {
+          "type": "integer"
+        },
+        "type": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "line_name": {
+          "type": "string"
+        },
+        "station_code": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        }
+      }
+    },
+    "TransactionSearch": {
+      "type": "object",
+      "properties": {
+        "community_name": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "start_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "end_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "building_type": {
+          "type": "string"
+        },
+        "min_age": {
+          "type": "integer"
+        },
+        "max_age": {
+          "type": "integer"
+        },
+        "min_price": {
+          "type": "integer"
+        },
+        "max_price": {
+          "type": "integer"
+        },
+        "min_floor": {
+          "type": "integer"
+        },
+        "max_floor": {
+          "type": "integer"
+        },
+        "min_total_floor": {
+          "type": "integer"
+        },
+        "max_total_floor": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}
