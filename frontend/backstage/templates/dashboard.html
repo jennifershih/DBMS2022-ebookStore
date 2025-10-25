@@ -1,0 +1,509 @@
+{% extends "backstage.html" %}
+{% block head %}
+{{ super() }}
+<style>
+    .stats-section {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .chart-container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock head %}
+{% block title %}統計分析{% endblock title%}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2>房屋交易統計分析</h2>
+            <p class="text-muted">台積電園區周邊房屋交易數據分析</p>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="stats-section">
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-ranking-tab" data-bs-toggle="tab" data-bs-target="#nav-ranking" type="button" role="tab" aria-controls="nav-ranking" aria-selected="true">社區價格排名</button>
+                <button class="nav-link" id="nav-building-tab" data-bs-toggle="tab" data-bs-target="#nav-building" type="button" role="tab" aria-controls="nav-building" aria-selected="false">建物型態價格比較</button>
+                <button class="nav-link" id="nav-correlation-tab" data-bs-toggle="tab" data-bs-target="#nav-correlation" type="button" role="tab" aria-controls="nav-correlation" aria-selected="false">年齡面積相關分析</button>
+                <button class="nav-link" id="nav-trend-tab" data-bs-toggle="tab" data-bs-target="#nav-trend" type="button" role="tab" aria-controls="nav-trend" aria-selected="false">月度趨勢分析</button>
+            </div>
+        </nav>
+    </div>
+
+    <div class="tab-content" id="nav-tabContent">
+        <!-- Community Price Ranking -->
+        <div class="tab-pane fade show active" id="nav-ranking" role="tabpanel" aria-labelledby="nav-ranking-tab">
+            <div class="chart-container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>社區單價排名 (TOP 20)</h5>
+                        <div id="unitPriceRanking" style="width: 100%; height: 500px;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>社區總價排名 (TOP 20)</h5>
+                        <div id="totalPriceRanking" style="width: 100%; height: 500px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Building Type Comparison -->
+        <div class="tab-pane fade" id="nav-building" role="tabpanel" aria-labelledby="nav-building-tab">
+            <div class="chart-container">
+                <h5>建物型態平均價格比較</h5>
+                <div id="buildingTypeComparison" style="width: 100%; height: 500px;"></div>
+            </div>
+        </div>
+
+        <!-- Age vs Price Correlation -->
+        <div class="tab-pane fade" id="nav-correlation" role="tabpanel" aria-labelledby="nav-correlation-tab">
+            <div class="chart-container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>建築年齡 vs 單價分布</h5>
+                        <div id="ageVsUnitPrice" style="width: 100%; height: 500px;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>總面積 vs 單價分布</h5>
+                        <div id="areaVsUnitPrice" style="width: 100%; height: 500px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Trend -->
+        <div class="tab-pane fade" id="nav-trend" role="tabpanel" aria-labelledby="nav-trend-tab">
+            <div class="chart-container">
+                <h5>近12個月交易趨勢</h5>
+                <div id="monthlyTrend" style="width: 100%; height: 500px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Community Unit Price Ranking Chart
+var unitPriceChart = echarts.init(document.getElementById('unitPriceRanking'));
+var unitPriceData = {{ unit_price_ranking|tojson|safe }};
+var unitPriceOption = {
+    title: {
+        text: '社區單價排名',
+        subtext: '萬元/坪'
+    },
+    tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+            return params[0].name + '<br/>平均單價: ' + params[0].value + ' 萬元/坪';
+        }
+    },
+    xAxis: {
+        type: 'value',
+        name: '單價 (萬元/坪)'
+    },
+    yAxis: {
+        type: 'category',
+        data: unitPriceData.map(item => item.community_name),
+        axisLabel: {
+            interval: 0,
+            rotate: 0,
+            formatter: function(value) {
+                return value.length > 8 ? value.substring(0, 8) + '...' : value;
+            }
+        }
+    },
+    series: [{
+        type: 'bar',
+        data: unitPriceData.map(item => item.avg_unit_price),
+        itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                {offset: 0, color: '#83bff6'},
+                {offset: 0.5, color: '#188df0'},
+                {offset: 1, color: '#188df0'}
+            ])
+        },
+        label: {
+            show: true,
+            position: 'right',
+            formatter: '{c}'
+        }
+    }]
+};
+unitPriceChart.setOption(unitPriceOption);
+
+// Community Total Price Ranking Chart
+var totalPriceChart = echarts.init(document.getElementById('totalPriceRanking'));
+var totalPriceData = {{ total_price_ranking|tojson|safe }};
+var totalPriceOption = {
+    title: {
+        text: '社區總價排名',
+        subtext: '萬元'
+    },
+    tooltip: {
+        trigger: 'axis',
+        formatter: function(params) {
+            return params[0].name + '<br/>平均總價: ' + params[0].value + ' 萬元';
+        }
+    },
+    xAxis: {
+        type: 'value',
+        name: '總價 (萬元)'
+    },
+    yAxis: {
+        type: 'category',
+        data: totalPriceData.map(item => item.community_name),
+        axisLabel: {
+            interval: 0,
+            rotate: 0,
+            formatter: function(value) {
+                return value.length > 8 ? value.substring(0, 8) + '...' : value;
+            }
+        }
+    },
+    series: [{
+        type: 'bar',
+        data: totalPriceData.map(item => item.avg_total_price),
+        itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                {offset: 0, color: '#ffc658'},
+                {offset: 0.5, color: '#ff7300'},
+                {offset: 1, color: '#ff7300'}
+            ])
+        },
+        label: {
+            show: true,
+            position: 'right',
+            formatter: '{c}'
+        }
+    }]
+};
+totalPriceChart.setOption(totalPriceOption);
+
+// Building Type Comparison Chart
+var buildingTypeChart = echarts.init(document.getElementById('buildingTypeComparison'));
+var buildingTypeData = {{ building_type_comparison|tojson|safe }};
+var buildingTypeOption = {
+    title: {
+        text: '建物型態平均價格比較'
+    },
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+            type: 'shadow'
+        }
+    },
+    legend: {
+        data: ['平均單價', '平均總價']
+    },
+    xAxis: {
+        type: 'category',
+        data: buildingTypeData.map(item => item.building_type)
+    },
+    yAxis: [
+        {
+            type: 'value',
+            name: '單價 (萬元/坪)',
+            position: 'left'
+        },
+        {
+            type: 'value',
+            name: '總價 (萬元)',
+            position: 'right'
+        }
+    ],
+    series: [
+        {
+            name: '平均單價',
+            type: 'bar',
+            yAxisIndex: 0,
+            data: buildingTypeData.map(item => item.avg_unit_price),
+            itemStyle: {
+                color: '#5470c6'
+            }
+        },
+        {
+            name: '平均總價',
+            type: 'bar',
+            yAxisIndex: 1,
+            data: buildingTypeData.map(item => item.avg_total_price),
+            itemStyle: {
+                color: '#91cc75'
+            }
+        }
+    ]
+};
+buildingTypeChart.setOption(buildingTypeOption);
+
+// Age vs Unit Price Scatter Plot
+var ageVsUnitPriceChart = echarts.init(document.getElementById('ageVsUnitPrice'));
+var ageVsUnitPriceData = {{ age_vs_unit_price|tojson|safe }};
+var ageVsUnitPriceOption = {
+    title: {
+        text: '建築年齡 vs 單價關係'
+    },
+    tooltip: {
+        trigger: 'item',
+        formatter: function(params) {
+            return '建築年齡: ' + params.value[0] + ' 年<br/>單價: ' + params.value[1] + ' 萬元/坪';
+        }
+    },
+    xAxis: {
+        type: 'value',
+        name: '建築年齡 (年)',
+        scale: true
+    },
+    yAxis: {
+        type: 'value',
+        name: '單價 (萬元/坪)',
+        scale: true
+    },
+    series: [{
+        name: '交易記錄',
+        type: 'scatter',
+        data: ageVsUnitPriceData,
+        symbolSize: 8,
+        itemStyle: {
+            color: '#ee6666'
+        }
+    }]
+};
+ageVsUnitPriceChart.setOption(ageVsUnitPriceOption);
+
+// Area vs Unit Price Scatter Plot
+var areaVsUnitPriceChart = echarts.init(document.getElementById('areaVsUnitPrice'));
+var areaVsUnitPriceData = {{ area_vs_unit_price|tojson|safe }};
+var areaVsUnitPriceOption = {
+    title: {
+        text: '總面積 vs 單價關係'
+    },
+    tooltip: {
+        trigger: 'item',
+        formatter: function(params) {
+            return '總面積: ' + params.value[0] + ' 坪<br/>單價: ' + params.value[1] + ' 萬元/坪';
+        }
+    },
+    xAxis: {
+        type: 'value',
+        name: '總面積 (坪)',
+        scale: true
+    },
+    yAxis: {
+        type: 'value',
+        name: '單價 (萬元/坪)',
+        scale: true
+    },
+    series: [{
+        name: '交易記錄',
+        type: 'scatter',
+        data: areaVsUnitPriceData,
+        symbolSize: 8,
+        itemStyle: {
+            color: '#73c0de'
+        }
+    }]
+};
+areaVsUnitPriceChart.setOption(areaVsUnitPriceOption);
+
+// Monthly Trend Chart
+var monthlyTrendChart = echarts.init(document.getElementById('monthlyTrend'));
+var monthlyTrendData = {{ monthly_trend|tojson|safe }};
+var monthlyTrendOption = {
+    title: {
+        text: '近12個月交易趨勢'
+    },
+    tooltip: {
+        trigger: 'axis'
+    },
+    legend: {
+        data: ['平均單價', '交易筆數']
+    },
+    xAxis: {
+        type: 'category',
+        data: monthlyTrendData.map(item => item.month)
+    },
+    yAxis: [
+        {
+            type: 'value',
+            name: '單價 (萬元/坪)',
+            position: 'left'
+        },
+        {
+            type: 'value',
+            name: '交易筆數',
+            position: 'right'
+        }
+    ],
+    series: [
+        {
+            name: '平均單價',
+            type: 'line',
+            yAxisIndex: 0,
+            data: monthlyTrendData.map(item => item.avg_unit_price),
+            smooth: true,
+            itemStyle: {
+                color: '#fac858'
+            },
+            markPoint: {
+                data: [
+                    {type: 'max', name: '最高'},
+                    {type: 'min', name: '最低'}
+                ]
+            }
+        },
+        {
+            name: '交易筆數',
+            type: 'bar',
+            yAxisIndex: 1,
+            data: monthlyTrendData.map(item => item.transaction_count),
+            itemStyle: {
+                color: '#3ba272'
+            }
+        }
+    ]
+};
+monthlyTrendChart.setOption(monthlyTrendOption);
+
+// Resize charts when tab is shown
+document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(tab) {
+    tab.addEventListener('shown.bs.tab', function(event) {
+        setTimeout(function() {
+            unitPriceChart.resize();
+            totalPriceChart.resize();
+            buildingTypeChart.resize();
+            ageVsUnitPriceChart.resize();
+            areaVsUnitPriceChart.resize();
+            monthlyTrendChart.resize();
+        }, 100);
+    });
+});
+
+// Resize charts when window is resized
+window.addEventListener('resize', function() {
+    unitPriceChart.resize();
+    totalPriceChart.resize();
+    buildingTypeChart.resize();
+    ageVsUnitPriceChart.resize();
+    areaVsUnitPriceChart.resize();
+    monthlyTrendChart.resize();
+});
+</script>
+
+{% endblock content %}
+
+  // 以圓餅圖分析書本銷量
+  var chartDomb = document.getElementById('mainb');
+  var myChartb = echarts.init(chartDomb);
+  var data = {{datab|tojson}};
+  var optionb = {
+    title: {
+      text: '各類商品銷量分析',
+      left: 'center',
+      top: 'center'
+    },
+    tooltip: {},
+    legend: {
+      orient: 'vertical',
+      x: 'left',
+      data: ['BOOK', 'CD', 'DVD']
+    },
+    series: [
+      {
+        type: 'pie',
+        data: data,          
+        radius: ['40%', '70%']
+      }
+    ]
+  };
+
+  // 使用動態長條圖查看消費總額最多的使用者
+  var chartDomc = document.getElementById('mainc');
+  var myChartc = echarts.init(chartDomc);
+  var data = {{datac|tojson}};
+  var nameList = {{nameList|tojson}};
+  // var counter = {{counter|tojson}};
+  var countList = {{countList|tojson}};
+  var optionc = {
+    title: {
+      text: '使用者消費排名'
+    },
+    xAxis: {
+      max: 'dataMax'
+    },
+    yAxis: {
+      type: 'category',
+      data: nameList,
+      inverse: true,
+      animationDuration: 300,
+      animationDurationUpdate: 300,
+      max: 3
+    },
+    tooltip: {},
+    series: [
+      {
+        realtimeSort: true,
+        name: '消費總額',
+        type: 'bar',
+        data: data,
+        label: {
+          show: true,
+          position: 'right',
+          valueAnimation: true
+        }
+      },
+      {
+        realtimeSort: true,
+        name: '訂單總數',
+        type: 'bar',
+        data: countList,
+        label: {
+          show: true,
+          position: 'right',
+          valueAnimation: true
+        }
+      }
+      ],
+    legend: {
+      show: true
+    },
+    animationDuration: 3000,
+    animationDurationUpdate: 3000,
+    animationEasing: 'linear',
+    animationEasingUpdate: 'linear'
+  };
+
+  function run() {
+    myChartc.setOption({
+      series: [
+        {
+          type: 'bar',
+          data
+        }
+      ]
+    });
+  }
+
+  setTimeout(function() {
+    run();
+  }, 0);
+        
+  setInterval(function() {
+    update();
+  }, 3000);
+
+  optiona && myCharta.setOption(optiona);
+  optionb && myChartb.setOption(optionb);
+  optionc && myChartc.setOption(optionc);
+      
+</script>
+
+{% endblock content %}

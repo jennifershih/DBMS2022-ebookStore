@@ -1,0 +1,53 @@
+{% extends "frontstage.html" %}
+{% block head %}
+{{ super() }}
+{% endblock head %}
+
+{% block title %}交易系統首頁{% endblock title%}
+
+{% block content%}
+<br/>
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+  
+<script language="javascript">
+
+  alert('您沒有管理員的權限喔！');
+
+</script>
+
+{% endif %}
+{% endwith %}
+<div class="book_table">
+
+  <!-- Navigation Links -->
+  <div class="mb-3">
+    <a href="{{ url_for('user.userSearch') }}" class="btn btn-primary me-2">
+      <i class="bi bi-house-search"></i> 房屋交易查詢
+    </a>
+  </div>
+  
+  <!-- Product Display (Read-only) -->
+  <div class="row">
+    {% for book in book_data %}
+    {% if loop.index % 3 == 1 and loop.index > 1 %}
+    </div>
+    <div class="row">
+    {% endif %}
+    
+    <div class="col-sm-4 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">{{book.商品名稱}}</h5>
+          <p class="card-text">${{book.商品價格}}</p>
+        </div>
+      </div>
+    </div>
+    
+    {% endfor %}
+  </div>
+
+</div>
+
+{% endblock content%}

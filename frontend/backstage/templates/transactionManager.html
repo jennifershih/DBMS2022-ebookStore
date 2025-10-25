@@ -1,0 +1,569 @@
+{% extends "backstage.html" %}
+{% block head %}
+{{ super() }}
+<style>
+    .filter-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .quick-filter-btn {
+        margin: 5px;
+    }
+    .transaction-table {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+    }
+    .status-badge {
+        font-size: 0.8em;
+    }
+</style>
+{% endblock head %}
+
+{% block title %}交易管理{% endblock title %}
+
+{% block content %}
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endwith %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2>交易管理</h2>
+            <p class="text-muted">管理台積電園區周邊房屋交易記錄</p>
+        </div>
+    </div>
+
+    <!-- Quick Filters -->
+    <div class="filter-section">
+        <h5>快速篩選 - 台積電園區</h5>
+        <div class="row">
+            <div class="col-12">
+                <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="applyQuickFilter('竹科')">竹科園區</button>
+                <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="applyQuickFilter('中科')">中科園區</button>
+                <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="applyQuickFilter('南科')">南科園區</button>
+                <button type="button" class="btn btn-outline-primary quick-filter-btn" onclick="applyQuickFilter('龍潭')">龍潭園區</button>
+                <button type="button" class="btn btn-outline-secondary quick-filter-btn" onclick="clearFilters()">清除篩選</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Filters -->
+    <div class="filter-section">
+        <h5>進階篩選</h5>
+        <form id="filterForm" method="GET">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">社區名稱縮寫</label>
+                    <input type="text" class="form-control" name="community" placeholder="輸入社區名稱關鍵字">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">地段/地址關鍵字</label>
+                    <input type="text" class="form-control" name="address" placeholder="輸入地址關鍵字">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">交易日期起</label>
+                    <input type="date" class="form-control" name="date_start">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">交易日期迄</label>
+                    <input type="date" class="form-control" name="date_end">
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-2">
+                    <label class="form-label">建物型態</label>
+                    <select class="form-select" name="building_type">
+                        <option value="">全部</option>
+                        <option value="住宅大樓">住宅大樓</option>
+                        <option value="華廈">華廈</option>
+                        <option value="公寓">公寓</option>
+                        <option value="透天厝">透天厝</option>
+                        <option value="店面">店面</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">建築年齡（年）</label>
+                    <div class="d-flex">
+                        <input type="number" class="form-control" name="age_min" placeholder="最小">
+                        <span class="align-self-center mx-2">-</span>
+                        <input type="number" class="form-control" name="age_max" placeholder="最大">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">總價（萬元）</label>
+                    <div class="d-flex">
+                        <input type="number" class="form-control" name="price_min" placeholder="最小">
+                        <span class="align-self-center mx-2">-</span>
+                        <input type="number" class="form-control" name="price_max" placeholder="最大">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">單價（萬元/坪）</label>
+                    <div class="d-flex">
+                        <input type="number" class="form-control" name="unit_price_min" placeholder="最小">
+                        <span class="align-self-center mx-2">-</span>
+                        <input type="number" class="form-control" name="unit_price_max" placeholder="最大">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">總面積（坪）</label>
+                    <div class="d-flex">
+                        <input type="number" class="form-control" name="area_min" placeholder="最小">
+                        <span class="align-self-center mx-2">-</span>
+                        <input type="number" class="form-control" name="area_max" placeholder="最大">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">主要用途</label>
+                    <select class="form-select" name="main_use">
+                        <option value="">全部</option>
+                        <option value="住家用">住家用</option>
+                        <option value="商業用">商業用</option>
+                        <option value="工業用">工業用</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <label class="form-label">交易標的</label>
+                    <select class="form-select" name="transaction_target">
+                        <option value="">全部</option>
+                        <option value="房地(土地+建物)">房地(土地+建物)</option>
+                        <option value="房地(土地+建物)+車位">房地(土地+建物)+車位</option>
+                        <option value="建物">建物</option>
+                        <option value="土地">土地</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">主建物面積比例（%）</label>
+                    <div class="d-flex">
+                        <input type="number" class="form-control" name="main_area_ratio_min" placeholder="最小">
+                        <span class="align-self-center mx-2">-</span>
+                        <input type="number" class="form-control" name="main_area_ratio_max" placeholder="最大">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">樓層</label>
+                    <div class="d-flex">
+                        <input type="number" class="form-control" name="floor_min" placeholder="最小樓層">
+                        <span class="align-self-center mx-2">-</span>
+                        <input type="number" class="form-control" name="floor_max" placeholder="最大樓層">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">總樓層數</label>
+                    <div class="d-flex">
+                        <input type="number" class="form-control" name="total_floors_min" placeholder="最小">
+                        <span class="align-self-center mx-2">-</span>
+                        <input type="number" class="form-control" name="total_floors_max" placeholder="最大">
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">篩選</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">清除</button>
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTransactionModal">新增交易</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transaction Table -->
+    <div class="transaction-table">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>交易記錄列表</h5>
+            <div>
+                <span class="text-muted">共 {{ total_count }} 筆記錄</span>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover" id="transactionTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>交易序號</th>
+                        <th>社區名稱</th>
+                        <th>地址</th>
+                        <th>交易日期</th>
+                        <th>建物型態</th>
+                        <th>總價（萬）</th>
+                        <th>單價（萬/坪）</th>
+                        <th>總面積（坪）</th>
+                        <th>樓層</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr data-id="{{ transaction.id }}">
+                        <td>{{ transaction.id }}</td>
+                        <td>{{ transaction.community_name }}</td>
+                        <td>{{ transaction.address[:30] }}...</td>
+                        <td>{{ transaction.transaction_date.strftime('%Y-%m-%d') if transaction.transaction_date else '' }}</td>
+                        <td>{{ transaction.building_type }}</td>
+                        <td>{{ "%.0f"|format(transaction.total_price) if transaction.total_price else '' }}</td>
+                        <td>{{ "%.1f"|format(transaction.unit_price) if transaction.unit_price else '' }}</td>
+                        <td>{{ "%.1f"|format(transaction.total_area) if transaction.total_area else '' }}</td>
+                        <td>{{ transaction.floor }}/{{ transaction.total_floors }}</td>
+                        <td>
+                            {% if transaction.is_hidden %}
+                                <span class="badge bg-secondary status-badge">已隱藏</span>
+                            {% else %}
+                                <span class="badge bg-success status-badge">正常</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editTransaction('{{ transaction.id }}')" title="編輯">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                {% if not transaction.is_hidden %}
+                                    <button class="btn btn-sm btn-outline-warning" onclick="hideTransaction('{{ transaction.id }}')" title="隱藏">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-success" onclick="showTransaction('{{ transaction.id }}')" title="顯示">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                {% endif %}
+                                <button class="btn btn-sm btn-outline-info" onclick="viewTransaction('{{ transaction.id }}')" title="詳細">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="11" class="text-center text-muted">暫無交易記錄</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination %}
+        <nav aria-label="頁面導航">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('manager.transactionManager', page=pagination.prev_num, **request.args) }}">上一頁</a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in pagination.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != pagination.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('manager.transactionManager', page=page_num, **request.args) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('manager.transactionManager', page=pagination.next_num, **request.args) }}">下一頁</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Transaction Modal -->
+<div class="modal fade" id="addTransactionModal" tabindex="-1" aria-labelledby="addTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTransactionModalLabel">新增交易記錄</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('manager.addTransaction') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">社區名稱 *</label>
+                                <input type="text" class="form-control" name="community_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">地址 *</label>
+                                <textarea class="form-control" name="address" rows="2" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">交易日期 *</label>
+                                <input type="date" class="form-control" name="transaction_date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">建物型態 *</label>
+                                <select class="form-select" name="building_type" required>
+                                    <option value="">請選擇</option>
+                                    <option value="住宅大樓">住宅大樓</option>
+                                    <option value="華廈">華廈</option>
+                                    <option value="公寓">公寓</option>
+                                    <option value="透天厝">透天厝</option>
+                                    <option value="店面">店面</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">建築年齡（年）</label>
+                                <input type="number" class="form-control" name="building_age" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">總價（萬元） *</label>
+                                <input type="number" class="form-control" name="total_price" step="0.1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">單價（萬元/坪） *</label>
+                                <input type="number" class="form-control" name="unit_price" step="0.1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">總面積（坪） *</label>
+                                <input type="number" class="form-control" name="total_area" step="0.1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">主要用途 *</label>
+                                <select class="form-select" name="main_use" required>
+                                    <option value="">請選擇</option>
+                                    <option value="住家用">住家用</option>
+                                    <option value="商業用">商業用</option>
+                                    <option value="工業用">工業用</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">交易標的 *</label>
+                                <select class="form-select" name="transaction_target" required>
+                                    <option value="">請選擇</option>
+                                    <option value="房地(土地+建物)">房地(土地+建物)</option>
+                                    <option value="房地(土地+建物)+車位">房地(土地+建物)+車位</option>
+                                    <option value="建物">建物</option>
+                                    <option value="土地">土地</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">主建物面積比例（%）</label>
+                                <input type="number" class="form-control" name="main_area_ratio" step="0.1" min="0" max="100">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">樓層</label>
+                                <input type="number" class="form-control" name="floor" min="1">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">總樓層數</label>
+                                <input type="number" class="form-control" name="total_floors" min="1">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">車位個數</label>
+                                <input type="number" class="form-control" name="parking_spaces" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">新增交易</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Transaction Modal -->
+<div class="modal fade" id="editTransactionModal" tabindex="-1" aria-labelledby="editTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTransactionModalLabel">編輯交易記錄</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('manager.editTransaction') }}">
+                <input type="hidden" name="transaction_id" id="edit_transaction_id">
+                <div class="modal-body" id="editTransactionContent">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">儲存變更</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Transaction Modal -->
+<div class="modal fade" id="viewTransactionModal" tabindex="-1" aria-labelledby="viewTransactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewTransactionModalLabel">交易詳細資訊</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="viewTransactionContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#transactionTable').DataTable({
+        "paging": false,
+        "searching": false,
+        "info": false,
+        "ordering": true,
+        "columnDefs": [
+            { "orderable": false, "targets": [10] } // Disable sorting on action column
+        ]
+    });
+});
+
+function applyQuickFilter(area) {
+    // Set the address filter to the selected area
+    document.querySelector('input[name="address"]').value = area;
+    document.getElementById('filterForm').submit();
+}
+
+function clearFilters() {
+    // Clear all form fields
+    document.getElementById('filterForm').reset();
+    // Submit empty form to show all results
+    document.getElementById('filterForm').submit();
+}
+
+function clearForm() {
+    document.getElementById('filterForm').reset();
+}
+
+function editTransaction(id) {
+    // Load transaction data via AJAX
+    fetch(`/backstage/transaction/${id}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('edit_transaction_id').value = id;
+                document.getElementById('editTransactionContent').innerHTML = data.html;
+                new bootstrap.Modal(document.getElementById('editTransactionModal')).show();
+            } else {
+                alert('載入編輯表單失敗: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('載入編輯表單時發生錯誤');
+        });
+}
+
+function viewTransaction(id) {
+    // Load transaction details via AJAX
+    fetch(`/backstage/transaction/${id}/view`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('viewTransactionContent').innerHTML = data.html;
+                new bootstrap.Modal(document.getElementById('viewTransactionModal')).show();
+            } else {
+                alert('載入交易詳情失敗: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('載入交易詳情時發生錯誤');
+        });
+}
+
+function hideTransaction(id) {
+    if (confirm('確定要隱藏此筆交易記錄嗎？（隱藏後仍可復原）')) {
+        fetch(`/backstage/transaction/${id}/hide`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('隱藏失敗：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作時發生錯誤');
+        });
+    }
+}
+
+function showTransaction(id) {
+    if (confirm('確定要顯示此筆交易記錄嗎？')) {
+        fetch(`/backstage/transaction/${id}/show`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('顯示失敗：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作時發生錯誤');
+        });
+    }
+}
+</script>
+
+{% endblock content %}
